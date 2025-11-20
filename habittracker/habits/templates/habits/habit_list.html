@@ -1,0 +1,31 @@
+{% extends 'habits/base.html' %}
+{% block content %}
+<h2>Your Habits</h2>
+
+<a class="btn btn-primary mb-3" href="{% url 'habit_add' %}">Add Habit</a>
+
+<div class="row">
+    {% for h in habits %}
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="{% url 'habit_detail' h.id %}" class="text-decoration-none">
+                        {{ h.name }}
+                    </a>
+                </h5>
+                <p class="card-text">{{ h.description }}</p>
+
+                <div class="d-flex justify-content-between">
+                    <a class="btn btn-sm btn-warning" href="{% url 'habit_edit' h.id %}">Edit</a>
+                    <a class="btn btn-sm btn-danger" href="{% url 'habit_delete' h.id %}">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+        <p>No habits yet.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

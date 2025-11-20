@@ -1,0 +1,37 @@
+{% extends "habits/base.html" %}
+{% block content %}
+<h2>Dashboard</h2>
+
+<h4 class="mt-4">Today's Habits</h4>
+
+<h4 class="mt-4 mb-3">Weekly Overview</h4>
+
+<div class="table-responsive shadow-sm">
+    <table class="table table-bordered align-middle text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Habit</th>
+                {% for d in week_dates %}
+                    <th>{{ d|date:"D" }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for h, data in weekly_data %}
+            <tr>
+                <td class="fw-bold">{{ h.name }}</td>
+                {% for done in data %}
+                    <td>
+                        {% if done %}
+                            <span class="badge bg-success">✔</span>
+                        {% else %}
+                            <span class="badge bg-danger">✘</span>
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

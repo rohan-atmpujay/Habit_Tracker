@@ -1,0 +1,16 @@
+{% extends "habits/base.html" %}
+
+{% block content %}
+<h2>Login</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Log In</button>
+</form>
+
+<small>
+    Need an account? <a href="{% url 'signup' %}">Sign Up</a>
+</small>
+
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "habits/base.html" %}
+
+{% block content %}
+<h2>{{habit.name}}</h2>
+<p>{{habit.description}}</p>
+
+<hr>
+<h4>Streak</h4>
+<p><strong>Current Streak:</strong>{{current_streak}}days</p>
+<p><strong>Longest Streak:</strong>{{longest_streak}}days</p>
+<hr>
+
+<h4>History</h4>
+<ul class='list-group'>
+    {% for r in records %}
+    <li class='list-group-item'>
+        {{ r.date }} — {% if r.status %}✔ Completed{% else %}✘ Not Done{% endif %}
+    </li>
+    {% empty %}
+    <p>No records yet.</p>
+    {% endfor %}
+
+</ul>
+
+{% endblock %}
