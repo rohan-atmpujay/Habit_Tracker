@@ -2,15 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from .models import Habit ,HabitRecord
+from .models import Habit, HabitRecord
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from datetime import date, timedelta
 
-# Create your views here.
-# @login_required
+
 def home(request):
-    # return HttpResponse("working")
     return render(request, "habits/home.html")
 
 
@@ -39,19 +37,21 @@ def signup(request):
     else:
         form = UserCreationForm()
 
-    return render(request,'habits/signup.html', {'form':form})
+    return render(request, 'habits/signup.html', {'form': form})
+
 
 def user_logout(request):
     logout(request)
     messages.info(request, "You have been logged out.")
     return redirect('home')
 
-# @login_required
+
+@login_required
 def habit_list(request):
     habits = Habit.objects.filter(user=request.user)
     today = date.today()
 
-    # Add an attribute for template use
+    # mark done_today attribute for template
     for h in habits:
         h.done_today = h.habitrecord_set.filter(date=today).exists()
 
@@ -59,7 +59,8 @@ def habit_list(request):
         'habits': habits
     })
 
-# @login_required
+
+@login_required
 def habit_add(request):
     if request.method == "POST":
         name = request.POST['name']
@@ -68,6 +69,8 @@ def habit_add(request):
         return redirect('habit_list')
     return render(request, 'habits/habit_add.html')
 
+
+@login_required
 def habit_edit(request, id):
     habit = get_object_or_404(Habit, id=id, user=request.user)
     if request.method == 'POST':
@@ -75,84 +78,92 @@ def habit_edit(request, id):
         habit.description = request.POST.get('description', '')
         habit.save()
         return redirect('habit_list')
-    return render(request, "habits/habit_edit.html", {"habit":habit})
-    
+    return render(request, "habits/habit_edit.html", {"habit": habit})
+
+
+@login_required
 def habit_delete(request, id):
     habit = get_object_or_404(Habit, id=id, user=request.user)
     habit.delete()
     return redirect('habit_list')
 
+
 @login_required
 def mark_done(request, id):
     habit = get_object_or_404(Habit, id=id, user=request.user)
-    
-    # create record only if nt done today already
+
     HabitRecord.objects.get_or_create(
         habit=habit,
-        date=date.today(), 
+        date=date.today(),
         defaults={'status': True}
-        )
-    
-    return redirect(request, 'habit_list')
+    )
+
+    return redirect('habit_list')
+
 
 @login_required
 def habit_detail(request, id):
     habit = get_object_or_404(Habit, id=id, user=request.user)
     records = HabitRecord.objects.filter(habit=habit).order_by('-date')
-    
-    # calculate current streak
+
+    # current streak
     current_streak = 0
     today = date.today()
     for r in records:
         if r.date == today - timedelta(days=current_streak):
             current_streak += 1
         else:
-            break 
-        
-    # calculate longest streak
+            break
+
+    # longest streak
     longest_streak = 0
     streak = 0
     prev_date = None
-    
-    for r in records.order_by("-date"):
+
+    for r in records.order_by("date"):
         if prev_date and r.date == prev_date + timedelta(days=1):
-            streak +=1
-        
+            streak += 1
         else:
             streak = 1
         longest_streak = max(longest_streak, streak)
         prev_date = r.date
-        
+
     return render(request, 'habits/habit_detail.html', {
         'habit': habit,
         'records': records,
         'current_streak': current_streak,
         'longest_streak': longest_streak,
     })
-    
+
+
 @login_required
 def dashboard(request):
     today = date.today()
     habits = Habit.objects.filter(user=request.user)
-    
-    # records for today
+
+    # today status
     today_records = {
-        h.id : HabitRecord.objects.filter(habit=h, date=today).exists() 
+        h.id: HabitRecord.objects.filter(habit=h, date=today).exists()
         for h in habits
     }
-    
-    # weekly data
+
+    # last 7 days
     week_dates = [today - timedelta(days=i) for i in range(6, -1, -1)]
+
     weekly_data = []
-    
+
     for h in habits:
         day_status = []
         for d in week_dates:
             done = HabitRecord.objects.filter(habit=h, date=d).exists()
             day_status.append(done)
-        weekly_data.append(h, day_status)
-        
-        return render(request, 'dashboard.html', {
+
+        weekly_data.append({
+            "habit": h,
+            "status": day_status
+        })
+
+    return render(request, 'habits/dashboard.html', {
         'habits': habits,
         'today_records': today_records,
         'week_dates': week_dates,
